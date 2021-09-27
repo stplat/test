@@ -15,3 +15,16 @@ $capsule->addConnection([
 ]);
 
 $capsule->setAsGlobal();
+
+// /* Создаем таблицу tasks */
+$tableIsset = Capsule::schema()->hasTable('tasks');
+
+if (!$tableIsset) {
+    Capsule::schema()->create('tasks', function ($table) {
+        $table->id();
+        $table->string('status')->nullable();
+        $table->string('result')->nullable();
+        $table->string('photo_name');
+        $table->timestamps();
+    });
+}

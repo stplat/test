@@ -11,6 +11,7 @@ use Httpful\Request as Client;
 use Httpful\Mime;
 
 use GuzzleHttp\Client as GuzzleHttp;
+use GuzzleHttp\Psr7;
 
 class IndexController
 {
@@ -60,15 +61,33 @@ class IndexController
         $uploadDir = 'storage/';
         $path = $uploadDir . basename($photoName);
 
-        $asd = Client::post('http://merlinface.com:12345/api/')
-            ->body([
-                'name' => $photoName,
-                'photo' => curl_file_create('C:\OpenServer\domains\max-test.loc\storage\photo_2020-07-16_15-13-561.jpg', $photoMime, basename($photoName))
-            ], Mime::FORM)
-            ->send();
+        $client = new GuzzleHttp();
+
+        $client = $client->request('POST', 'http://merlinface.com:12345/api/', [
+            'multipart' => [
+                [
+                    'name' => $photoMime,
+                    'photo' => curl_file_create($path, $photoMime, basename($photoName)),
+                    'contents' => Psr7\Utils::tryFopen($path, 'r'),
+                    'headers' => [
+                        // 'Content-Type' => 'multipart/form-data'
+                    ],
+                ],
+            ],
+            // 'headers' => [
+            //     'Content-Type' => 'multipart/form-data'
+            // ],
+        ]);
+
+        // $client = Client::post('http://merlinface.com:12345/api/')
+        //     ->body([
+        //         'name' => $photoName,
+        //         'photo' =>  curl_file_create('https://purepng.com/public/uploads/thumbnail/purepng.com-donald-duckdonald-duckdonaldduckcartoon-character1934walt-disneywhite-duck-1701528532083emc6z.png')
+        //     ], Mime::FORM)
+        //     ->send();
 
         echo '<pre>';
-        var_dump($asd->body);
+        var_dump($client->body);
         echo '</pre>';
 
         if (!file_exists($path)) {
@@ -79,12 +98,12 @@ class IndexController
                 ]);
 
 
-                $asd = Client::post('http://merlinface.com:12345/api/')
-                    ->body([
-                        'name' => $photoName,
-                        'photo' => curl_file_create('C:\OpenServer\domains\max-test.loc\storage\photo_2020-07-16_15-13-561.jpg', $photoMime, basename($photoName))
-                    ], Mime::FORM)
-                    ->send();
+                // $asd = Client::post('http://merlinface.com:12345/api/')
+                //     ->body([
+                //         'name' => $photoName,
+                //         'photo' => curl_file_create($path, $photoMime, basename($photoName))
+                //     ], Mime::FORM)
+                //     ->send();
 
                 // echo '<pre>';
                 // var_dump($file);
@@ -108,7 +127,7 @@ class IndexController
                     'task' => $taskId,
                     'status' => 'received',
                     'result' => null,
-                    'asd' => $asd->body
+                    // 'asd' => $asd->body
                 ]));
 
                 $this->response->send();
